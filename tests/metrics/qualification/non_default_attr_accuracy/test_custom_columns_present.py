@@ -18,4 +18,4 @@ def test_fail_for_all_float(rec: Recording) -> None:
 
 def test_fail_for_all_int(rec: Recording) -> None:
     _df, result_dict = non_default_attributes_accuracy(rec.df, columns=get_column_names(int))
-    this_assert(result_dict, 79.95391705069125, False)
+    this_assert(result_dict, 83.29493087557604, False)

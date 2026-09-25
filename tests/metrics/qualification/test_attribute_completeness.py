@@ -13,7 +13,8 @@ def test_pass(rec: Recording) -> None:
 
 
 def test_fail(rec: Recording) -> None:
+    expected = 100 * (len(polars_schema) - 1) / len(polars_schema)
     for column_to_drop in polars_schema:
         incomplete_df = rec.df.drop(column_to_drop)
         _df, result = attribute_completeness(incomplete_df)
-        qualification_assert(result, ATTRIBUTE_COMPLETENESS, 95.0, False)
+        qualification_assert(result, ATTRIBUTE_COMPLETENESS, expected, False)

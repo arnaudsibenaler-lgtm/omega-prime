@@ -2,7 +2,7 @@ from omega_prime.metrics.qualification.non_default_attr_accuracy import get_colu
 
 
 def test_get_column_names() -> None:
-    assert get_column_names(int) == ["total_nanos", "idx", "type", "role", "subtype"]
+    assert get_column_names(int) == ["total_nanos", "idx", "type", "role", "subtype", "trailer_id"]
     # fmt: off
     ref = [
         "x", "y", "z",

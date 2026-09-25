@@ -398,6 +398,22 @@ Though, it could be checked if the field was actually intendedly set to false us
 <td></td>
 </tr>
 <tr>
+<td>. . has_trailer</td>
+<td>
+<p>bool</p>
+<p>Whether a trailer is attached to the vehicle. Must be false for moving objects that are not of type vehicle.</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td>. . trailer_id</td>
+<td>
+<p>Identifier</p>
+<p>Id of the attached trailer. Only set if has_trailer is true.</p>
+</td>
+<td></td>
+</tr>
+<tr>
 <td>traffic_light</td>
 <td>list[TrafficLight]</td>
 <td></td>

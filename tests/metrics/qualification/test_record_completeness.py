@@ -4,6 +4,7 @@ import polars as pl
 
 from omega_prime import Recording
 from omega_prime.metrics.qualification.record_completeness import RECORD_COMPLETENESS, record_completeness
+from omega_prime.schemas import polars_schema
 
 from .conftest import qualification_assert
 
@@ -14,9 +15,9 @@ def test_pass(rec: Recording) -> None:
 
 
 def test_fail(rec: Recording) -> None:
-    df = rec.df.with_columns(pl.lit(None).alias("x"))
+    df = rec.df.with_columns(pl.lit(None).alias("x"), pl.lit(None).alias("y"))
     _df, result = record_completeness(df)
-    qualification_assert(result, RECORD_COMPLETENESS, 95.0, False)
+    qualification_assert(result, RECORD_COMPLETENESS, 100 * (len(polars_schema) - 2) / len(polars_schema), False)
 
 
 def test_pass_lt_100(rec: Recording) -> None:
@@ -28,4 +29,4 @@ def test_pass_lt_100(rec: Recording) -> None:
     )
 
     _df, result = record_completeness(df)
-    qualification_assert(result, RECORD_COMPLETENESS, 99.95391705069125, True)
+    qualification_assert(result, RECORD_COMPLETENESS, 99.9581064097193, True)

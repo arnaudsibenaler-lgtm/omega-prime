@@ -109,6 +109,9 @@ class LxdConverter(DatasetConverter):
         tracks = tracks.with_columns(
             [pl.lit(0.0).alias(k) for k in ["acc_z", "z", "vel_z", "roll", "pitch"]]
             + [
+                # LevelX datasets provide no trailer information
+                pl.lit(False).alias("has_trailer"),
+                pl.lit(-1, dtype=pl.Int64).alias("trailer_id"),
                 ((((pl.col("heading") / 180 * np.pi) + np.pi) % (2 * np.pi)) - np.pi).alias("yaw"),
                 (pl.col("frame") * dt * NANOS_PER_SEC).cast(pl.Int64).alias("total_nanos"),
                 pl.when(is_vehicle & is_bicycle)

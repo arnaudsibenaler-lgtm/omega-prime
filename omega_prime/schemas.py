@@ -28,6 +28,8 @@ polars_schema = {
     "type": pl.Int64,
     "role": pl.Int64,
     "subtype": pl.Int64,
+    "has_trailer": pl.Boolean,
+    "trailer_id": pl.Int64,
 }
 
 
@@ -132,6 +134,17 @@ recording_moving_object_schema = pa.DataFrameSchema(
             title="MovingObject.vehicle_classification.type",
             description="osi3.MovingObject.VehicleClassification.Type",
         ),
+        "has_trailer": pa.Column(
+            polars_schema["has_trailer"],
+            title="MovingObject.vehicle_classification.has_trailer",
+            description="bool",
+        ),
+        "trailer_id": pa.Column(
+            polars_schema["trailer_id"],
+            pa.Check.ge(-1),
+            title="MovingObject.vehicle_classification.trailer_id.value",
+            description="osi3.Identifier.value, `-1` if no trailer is attached",
+        ),
         "roll": pa.Column(
             polars_schema["roll"],
             pi_valued,
@@ -189,6 +202,20 @@ recording_moving_object_schema = pa.DataFrameSchema(
             "subtype",
             -1,
             error="`subtype` is set despite type not being `TYPE_VEHICLE`",
+        ),
+        pa.Check.other_column_unset_on_column_value(
+            "type",
+            int(betterosi.MovingObjectType.TYPE_VEHICLE),
+            "has_trailer",
+            False,
+            error="`has_trailer` is set despite type not being `TYPE_VEHICLE`",
+        ),
+        pa.Check.other_column_unset_on_column_value(
+            "has_trailer",
+            True,
+            "trailer_id",
+            -1,
+            error="`trailer_id` is set despite `has_trailer` being `False`",
         ),
         pa.Check.check_has_no_frame_skip(error="Some objects skip frames during their existence."),
     ],

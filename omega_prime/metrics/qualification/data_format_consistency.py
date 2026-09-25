@@ -27,6 +27,7 @@ _VALUE_CHECKS = {
     "type": pl.col("type").is_between(0, _MAX_MOVING_OBJECT_TYPE),
     "role": pl.col("role").is_between(-1, _MAX_VEHICLE_ROLE),
     "subtype": pl.col("subtype").is_between(-1, _MAX_VEHICLE_SUBTYPE),
+    "trailer_id": pl.col("trailer_id") >= -1,
 }
 
 

@@ -244,7 +244,10 @@ class Recording:
                     acceleration=betterosi.Vector3D(x=row["acc_x"], y=row["acc_y"], z=row["acc_z"]),
                 ),
                 vehicle_classification=betterosi.MovingObjectVehicleClassification(
-                    type=row["subtype"], role=row["role"]
+                    type=row["subtype"],
+                    role=row["role"],
+                    has_trailer=row["has_trailer"],
+                    trailer_id=(betterosi.Identifier(value=row["trailer_id"]) if row["trailer_id"] != -1 else None),
                 ),
             )
 
@@ -294,6 +297,18 @@ class Recording:
             df = df.with_columns(*exprs)
         return df
 
+    @staticmethod
+    def _ensure_trailer_columns(df: pl.DataFrame) -> pl.DataFrame:
+        # Backward compatibility with omega-prime without "has_trailer" or "trailer_id"
+        exprs = []
+        if "has_trailer" not in df.columns:
+            exprs.append(pl.lit(False).alias("has_trailer"))
+        if "trailer_id" not in df.columns:
+            exprs.append(pl.lit(-1, dtype=pl.Int64).alias("trailer_id"))
+        if exprs:
+            df = df.with_columns(*exprs)
+        return df
+
     def __init__(
         self,
         df,
@@ -310,6 +325,7 @@ class Recording:
         nanos2frame, mapping = self._build_frame_mapping(df)
         df = self._attach_frame_column(df, mapping)
         df = self._ensure_polars_dataframe(df)
+        df = self._ensure_trailer_columns(df)
         if validate:
             recording_moving_object_schema.validate(df, lazy=True)
 
@@ -343,7 +359,7 @@ class Recording:
                 self._df.group_by("idx")
                 .agg(
                     pl.col("length", "width", "height").mean(),
-                    pl.col("type", "subtype", "role").mode().sort().first(),
+                    pl.col("type", "subtype", "role", "has_trailer", "trailer_id").mode().sort().first(),
                     pl.col("frame").min().alias("birth"),
                     pl.col("frame").max().alias("end"),
                     pl.col("total_nanos").min().alias("t_birth"),
@@ -456,6 +472,10 @@ class Recording:
                 traffic_light_states[total_nanos] = gt.traffic_light
 
                 for mv in gt.moving_object:
+                    is_vehicle = mv.type == betterosi.MovingObjectType.TYPE_VEHICLE
+                    has_trailer = bool(
+                        is_vehicle and mv.vehicle_classification is not None and mv.vehicle_classification.has_trailer
+                    )
                     yield dict(
                         total_nanos=total_nanos,
                         idx=mv.id.value,
@@ -480,6 +500,12 @@ class Recording:
                         ),
                         subtype=(
                             mv.vehicle_classification.type if mv.type == betterosi.MovingObjectType.TYPE_VEHICLE else -1
+                        ),
+                        has_trailer=has_trailer,
+                        trailer_id=(
+                            mv.vehicle_classification.trailer_id.value
+                            if has_trailer and mv.vehicle_classification.trailer_id is not None
+                            else -1
                         ),
                     )
 
@@ -806,7 +832,7 @@ class Recording:
                 "height",
             ]:
                 track_data[c] = np.interp(track_new_nanos, track_df["total_nanos"], track_df[c])
-            for c in ["type", "subtype", "role"]:
+            for c in ["type", "subtype", "role", "has_trailer", "trailer_id"]:
                 track_data[c] = nearest_interp(
                     track_new_nanos,
                     track_df["total_nanos"].to_numpy(),

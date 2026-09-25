@@ -25,15 +25,16 @@ def get_column_names(t: type[int] | type[float]) -> list[str]:
     return [k for k, v in polars_schema.items() if v == pl_type]
 
 
-POLARS_T = pl.Int64 | pl.Float64 | pl.Float32 | pl.Binary | pl.Object | pl.String
+POLARS_T = pl.Int64 | pl.Float64 | pl.Float32 | pl.Boolean | pl.Binary | pl.Object | pl.String
 
 
-def get_default_value(polars_type: POLARS_T) -> float | int | str | bytes:
+def get_default_value(polars_type: POLARS_T) -> float | int | bool | str | bytes:
     x = 0  # silencing the code checker in PyCharm.
     # fmt: off
     match polars_type:
         case pl.Int64: x = 0
         case pl.Float64 | pl.Float32: x = 0.0
+        case pl.Boolean: x = False
         case pl.Binary: x = b''
         case pl.String: x = ''
         case _:
